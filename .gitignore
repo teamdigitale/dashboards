@@ -1,0 +1,15 @@
+# Generated CSV output
+data/
+*.csv
+
+# Env files
+.env
+.env.local
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# Direnv
+.direnv/

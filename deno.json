@@ -1,0 +1,27 @@
+{
+  "tasks": {
+    "start": "deno run -P src/main.ts",
+    "forum": "deno run -P src/main.ts --engine forum",
+    "check": "deno check src/main.ts",
+    "fmt": "deno fmt",
+    "lint": "deno lint",
+    "test": "deno test -P"
+  },
+  "permissions": {
+    "default": {
+      "net": true,
+      "env": true,
+      "read": true,
+      "write": true
+    }
+  },
+  "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.19",
+    "@std/cli": "jsr:@std/cli@^1.0.29",
+    "@std/csv": "jsr:@std/csv@^1.0.6",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225.6",
+    "@std/log": "jsr:@std/log@^0.224.14",
+    "@std/path": "jsr:@std/path@^1.1.4",
+    "discourse2": "jsr:@gadicc/discourse2@^1.2.0"
+  }
+}
