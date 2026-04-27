@@ -15,6 +15,8 @@ src/
     registry.ts      # name -> factory
     forum.ts         # forum.italia.it (Discourse, via discourse2)
     github.ts        # github.com/italia (via octokit)
+    slack.ts         # developersitalia.slack.com
+    catalogo.ts      # api.developers.italia.it (software catalog)
   lib/
     http.ts          # fetch wrapper with 429 back-off + bounded concurrency
     retry.ts         # generic retry-with-backoff
@@ -107,6 +109,23 @@ with the `users:read` scope. Create an app at https://api.slack.com/apps,
 install it to the `developersitalia` workspace and use the Bot OAuth token.
 
 Metrics: `num_registered_users`.
+
+### `catalogo` — api.developers.italia.it
+
+Stats from the
+[Developers Italia software catalog](https://developers.italia.it/en/software).
+Reimplementation against the REST API `https://api.developers.italia.it/v1`
+(replacing the now-defunct YAML files on crawler.developers.italia.it).
+
+The API is public — no credentials required.
+
+Metrics: `num_pas`, `num_softwares`, `num_softwares_reuse`,
+`num_softwares_reusing`, `vitality`, `num_pas_reusing`.
+
+> **Note on `num_pas` / `num_pas_reusing`:** only the first occurrence of each
+> PA (by `releaseDate`) is counted per day, matching the original Python
+> behaviour. The day-by-day distribution depends on iteration order, which is by
+> `createdAt` in the new API rather than the YAML file order.
 
 ## Adding a new engine
 
