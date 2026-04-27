@@ -1,15 +1,21 @@
 import type { EngineContext } from "../engines/engine.ts";
 
+export interface ContextOptions {
+  numThreads: number;
+  since?: Date;
+}
+
 /**
  * Build an `EngineContext` that resolves properties from a CLI args record
  * first, then from environment variables (uppercased).
  */
 export function buildContext(
   args: Record<string, string | number | boolean | undefined>,
-  numThreads: number,
+  opts: ContextOptions,
 ): EngineContext {
   return {
-    numThreads,
+    numThreads: opts.numThreads,
+    since: opts.since,
     getProperty(name) {
       const fromArgs = args[name];
       if (fromArgs !== undefined && fromArgs !== "") return String(fromArgs);

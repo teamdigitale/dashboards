@@ -6,7 +6,7 @@
  * CSV file, one per engine.
  */
 
-export type Timestamp = string; // ISO-8601 at midnight UTC, e.g. "2024-05-01T00:00:00Z"
+export type Timestamp = string; // "YYYY-MM-DDT00:00:00Z" (UTC midnight)
 
 /** Row of metric values keyed by metric name. All values default to 0. */
 export type MetricRow = Record<string, number>;
@@ -19,6 +19,8 @@ export interface EngineContext {
   numThreads: number;
   /** Read a configuration value (CLI arg > env var). */
   getProperty(name: string): string | undefined;
+  /** Lower bound for incremental engines. `undefined` = full history. */
+  since?: Date;
 }
 
 export interface Engine {
