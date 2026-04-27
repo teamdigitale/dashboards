@@ -51,6 +51,7 @@ uppercase environment variable (`FOO_BAR`).
 | --------------- | --------------- | ---------------------------------- |
 | `forum_api_key` | `FORUM_API_KEY` | forum                              |
 | `github_token`  | `GITHUB_TOKEN`  | github                             |
+| `slack_token`   | `SLACK_TOKEN`   | slack                              |
 | `num_threads`   | `NUM_THREADS`   | all (def 4)                        |
 | —               | `LOG_LEVEL`     | all (def INFO)                     |
 | —               | `LOG_FORMAT`    | all (`text` or `json`, def `text`) |
@@ -98,6 +99,14 @@ snapshot, is shifted onto the previous day before that.
 
 Metrics: `num_members`, `num_repos`, `num_forks`, `num_contribs`, `num_commits`,
 `num_pr`.
+
+### `slack` — developersitalia.slack.com
+
+Counts registered workspace members via `users.list`. Requires a Slack bot token
+with the `users:read` scope. Create an app at https://api.slack.com/apps,
+install it to the `developersitalia` workspace and use the Bot OAuth token.
+
+Metrics: `num_registered_users`.
 
 ## Adding a new engine
 

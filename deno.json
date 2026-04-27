@@ -3,6 +3,7 @@
     "start": "deno run -P src/main.ts",
     "forum": "deno run -P src/main.ts --engine forum",
     "github": "deno run -P src/main.ts --engine github",
+    "slack": "deno run -P src/main.ts --engine slack",
     "check": "deno check src/main.ts",
     "fmt": "deno fmt",
     "lint": "deno lint",

@@ -33,6 +33,7 @@ const args = parseArgs(Deno.args, {
     "data-dir",
     "forum_api_key",
     "github_token",
+    "slack_token",
     "num_threads",
     "since",
   ],
@@ -56,6 +57,7 @@ Options:
                         (github engine only). Mutually exclusive with --since.
       --forum_api_key   Discourse API key (or set FORUM_API_KEY)
       --github_token    GitHub token (or set GITHUB_TOKEN)
+      --slack_token     Slack bot token (or set SLACK_TOKEN)
   -h, --help            Show this help
 `);
   Deno.exit(0);
