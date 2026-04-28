@@ -13,7 +13,6 @@ import Discourse, { HTTPError } from "discourse2";
 import type {
   Engine,
   EngineContext,
-  MetricRow,
   MetricsByDay,
   Timestamp,
 } from "./engine.ts";
@@ -84,7 +83,7 @@ export class ForumEngine implements Engine {
 
   // --- helpers ------------------------------------------------------------
 
-  private touch(ts: Timestamp): MetricRow {
+  private touch(ts: Timestamp): Record<string, number> {
     ensureDay(this.metrics, ts, this.metricNames);
     return this.metrics.get(ts)!;
   }

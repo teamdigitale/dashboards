@@ -20,11 +20,11 @@ Deno.test("metricsToCsv emits header and sorted rows", () => {
   assertEquals(csv[2], "2024-02-01T00:00:00Z,1,2");
 });
 
-Deno.test("metricsToCsv fills missing metrics with 0", () => {
+Deno.test("metricsToCsv fills missing metrics with empty string", () => {
   const m = new Map([[
     "2024-01-01T00:00:00Z",
-    { a: 5 } as Record<string, number>,
+    { a: 5 } as Record<string, number | string>,
   ]]);
   const csv = metricsToCsv(fakeEngine, m, false).trim();
-  assertEquals(csv, "2024-01-01T00:00:00Z,5,0");
+  assertEquals(csv, "2024-01-01T00:00:00Z,5,");
 });

@@ -36,6 +36,9 @@ const args = parseArgs(Deno.args, {
     "slack_token",
     "num_threads",
     "since",
+    "catalogoaudiences",
+    "catalogocategories",
+    "catalogoregioni",
   ],
   boolean: ["help", "incremental"],
   alias: { h: "help", e: "engine", d: "data-dir" },
@@ -58,6 +61,12 @@ Options:
       --forum_api_key   Discourse API key (or set FORUM_API_KEY)
       --github_token    GitHub token (or set GITHUB_TOKEN)
       --slack_token     Slack bot token (or set SLACK_TOKEN)
+
+  Catalog engines (no credentials required):
+      catalogoaudiences  intendedAudience.scope rows per software
+      catalogocategories categories rows per software
+      catalogoregioni    PA and software counts per Italian region
+
   -h, --help            Show this help
 `);
   Deno.exit(0);
@@ -123,8 +132,15 @@ for (const key of selected) {
     const stats = await engine.computeStats();
     const outPath = join(args["data-dir"], `${engine.name}.csv`);
 
-    if (args.incremental) {
-      // Append rows without rewriting the header.
+    // Engines may implement toCsv() to override the default serialization
+    // (e.g. wide-format pivot tables that don't fit the key-value model).
+    const hasCustomCsv = "toCsv" in engine &&
+      typeof (engine as Record<string, unknown>).toCsv === "function";
+
+    if (hasCustomCsv) {
+      const csv = (engine as { toCsv: () => string }).toCsv();
+      await Deno.writeTextFile(outPath, csv);
+    } else if (args.incremental) {
       const csv = metricsToCsv(engine, stats, false);
       await Deno.writeTextFile(outPath, csv, { append: true });
     } else {
