@@ -24,6 +24,8 @@ export interface EngineContext {
   getProperty(name: string): string | undefined;
   /** Lower bound for incremental engines. `undefined` = full history. */
   since?: Date;
+  /** Directory where CSV outputs are written and derived engines read from. */
+  dataDir: string;
 }
 
 export interface Engine<T extends number | string = number> {

@@ -9,6 +9,8 @@ import { CatalogoRiusatoEngine } from "./catalogoriusato.ts";
 import { CatalogoRiusoEngine } from "./catalogoriuso.ts";
 import { CatalogoTotaleEngine } from "./catalogototale.ts";
 import { ForumEngine } from "./forum.ts";
+import { ForumPageviewsSettimanaleEngine } from "./forumpageviewssettimanale.ts";
+import { ForumPostsSettimanaleEngine } from "./forumpostssettimanale.ts";
 import { GitHubEngine } from "./github.ts";
 import { SlackEngine } from "./slack.ts";
 
@@ -21,6 +23,8 @@ export const ENGINES: Record<
   (ctx: EngineContext) => Engine<number | string>
 > = {
   forum: (ctx) => new ForumEngine(ctx),
+  forumpostssettimanale: (ctx) => new ForumPostsSettimanaleEngine(ctx),
+  forumpageviewssettimanale: (ctx) => new ForumPageviewsSettimanaleEngine(ctx),
   github: (ctx) => new GitHubEngine(ctx),
   slack: (ctx) => new SlackEngine(ctx),
   catalogo: (ctx) => new CatalogoEngine(ctx),

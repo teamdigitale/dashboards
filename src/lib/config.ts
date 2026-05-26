@@ -3,6 +3,7 @@ import type { EngineContext } from "../engines/engine.ts";
 export interface ContextOptions {
   numThreads: number;
   since?: Date;
+  dataDir: string;
 }
 
 /**
@@ -16,6 +17,7 @@ export function buildContext(
   return {
     numThreads: opts.numThreads,
     since: opts.since,
+    dataDir: opts.dataDir,
     getProperty(name) {
       const fromArgs = args[name];
       if (fromArgs !== undefined && fromArgs !== "") return String(fromArgs);

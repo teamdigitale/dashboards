@@ -119,6 +119,7 @@ for (const key of selected) {
   const ctx = buildContext(args as Record<string, string | undefined>, {
     numThreads,
     since: engineSince,
+    dataDir: args["data-dir"] as string,
   });
 
   const engine = ENGINES[key](ctx);
