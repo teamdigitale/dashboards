@@ -4,6 +4,7 @@ import { CatalogoAudiencesEngine } from "./catalogoaudiences.ts";
 import { CatalogoCategoriesEngine } from "./catalogocategories.ts";
 import { CatalogoPasRiusantiEngine } from "./catalogopasriusanti.ts";
 import { CatalogoRegioniEngine } from "./catalogoregioni.ts";
+import { CatalogoPasCumulativoEngine } from "./catalogopascumulativo.ts";
 import { CatalogoRiusatoEngine } from "./catalogoriusato.ts";
 import { CatalogoRiusoEngine } from "./catalogoriuso.ts";
 import { CatalogoTotaleEngine } from "./catalogototale.ts";
@@ -29,6 +30,7 @@ export const ENGINES: Record<
   catalogototale: (ctx) => new CatalogoTotaleEngine(ctx),
   catalogoriuso: (ctx) => new CatalogoRiusoEngine(ctx),
   catalogoriusato: (ctx) => new CatalogoRiusatoEngine(ctx),
+  catalogopascumulativo: (ctx) => new CatalogoPasCumulativoEngine(ctx),
   catalogopasriusanti: (ctx) => new CatalogoPasRiusantiEngine(ctx),
 };
 
