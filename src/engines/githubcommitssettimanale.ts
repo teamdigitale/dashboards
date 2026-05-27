@@ -1,20 +1,22 @@
 /**
- * Weekly aggregation of forum page views (num_pageviewes).
+ * Weekly aggregation of GitHub commits (num_commits).
  *
- * Reads forum.csv from dataDir and sums num_pageviewes by ISO week (Mon–Sun).
+ * Reads github.csv from dataDir and sums num_commits by ISO week (Mon–Sun).
  * Output: wide-format CSV with week labels as headers.
  *
  *   27/4 - 3/5 2026,4/5 - 10/5 2026,...
- *   1200,980,...
+ *   142,98,...
+ *
+ * Depends on github.csv being present in dataDir.
  */
 
 import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
 import { aggregateWeekly } from "../lib/weekly.ts";
 
-export class ForumPageviewsSettimanaleEngine implements Engine<number> {
-  readonly name = "forumpageviewssettimanale";
+export class GitHubCommitsSettimanaleEngine implements Engine<number> {
+  readonly name = "githubcommitssettimanale";
   readonly keyName = "settimana";
-  readonly metricNames = ["num_pageviewes"] as const;
+  readonly metricNames = ["num_commits"] as const;
 
   private readonly ctx: EngineContext;
   private sortedWeeks: string[] = [];
@@ -27,9 +29,9 @@ export class ForumPageviewsSettimanaleEngine implements Engine<number> {
   async computeStats(): Promise<MetricsByDay<number>> {
     const result = await aggregateWeekly(
       this.ctx,
-      "forum.csv",
-      "num_pageviewes",
-      "num_pageviewes",
+      "github.csv",
+      "num_commits",
+      "num_commits",
     );
     this.sortedWeeks = result.sortedWeeks;
     this.weeklyCounts = result.weeklyCounts;

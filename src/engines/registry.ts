@@ -9,6 +9,8 @@ import { CatalogoRiusatoEngine } from "./catalogoriusato.ts";
 import { CatalogoRiusoEngine } from "./catalogoriuso.ts";
 import { CatalogoTotaleEngine } from "./catalogototale.ts";
 import { ForumEngine } from "./forum.ts";
+import { GitHubCommitsSettimanaleEngine } from "./githubcommitssettimanale.ts";
+import { GitHubContribsSettimanaleEngine } from "./githubcontribssettimanale.ts";
 import { ForumPageviewsSettimanaleEngine } from "./forumpageviewssettimanale.ts";
 import { ForumPostsSettimanaleEngine } from "./forumpostssettimanale.ts";
 import { GitHubEngine } from "./github.ts";
@@ -24,6 +26,8 @@ export const ENGINES: Record<
 > = {
   forum: (ctx) => new ForumEngine(ctx),
   forumpostssettimanale: (ctx) => new ForumPostsSettimanaleEngine(ctx),
+  githubcommitssettimanale: (ctx) => new GitHubCommitsSettimanaleEngine(ctx),
+  githubcontribssettimanale: (ctx) => new GitHubContribsSettimanaleEngine(ctx),
   forumpageviewssettimanale: (ctx) => new ForumPageviewsSettimanaleEngine(ctx),
   github: (ctx) => new GitHubEngine(ctx),
   slack: (ctx) => new SlackEngine(ctx),

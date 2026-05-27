@@ -15,10 +15,11 @@ export interface WeeklyResult {
 
 export async function aggregateWeekly(
   ctx: EngineContext,
+  filename: string,
   column: string,
   metricName: string,
 ): Promise<WeeklyResult> {
-  const csvPath = join(ctx.dataDir, "forum.csv");
+  const csvPath = join(ctx.dataDir, filename);
   const log = getLogger();
   log.info(`Reading ${csvPath} for weekly ${column}...`);
 

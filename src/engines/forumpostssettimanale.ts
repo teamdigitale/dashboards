@@ -9,7 +9,7 @@
  */
 
 import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
-import { aggregateWeekly } from "../lib/forum_weekly.ts";
+import { aggregateWeekly } from "../lib/weekly.ts";
 
 export class ForumPostsSettimanaleEngine implements Engine<number> {
   readonly name = "forumpostssettimanale";
@@ -25,7 +25,12 @@ export class ForumPostsSettimanaleEngine implements Engine<number> {
   }
 
   async computeStats(): Promise<MetricsByDay<number>> {
-    const result = await aggregateWeekly(this.ctx, "num_posts", "num_posts");
+    const result = await aggregateWeekly(
+      this.ctx,
+      "forum.csv",
+      "num_posts",
+      "num_posts",
+    );
     this.sortedWeeks = result.sortedWeeks;
     this.weeklyCounts = result.weeklyCounts;
     return result.metrics;
