@@ -1,10 +1,11 @@
 /**
  * Software catalog categories engine.
  *
- * Produces a wide-format CSV: categories as column headers sorted by count ascending, a single data row with the per-category software counts.
+ * Produces a CSV with one row per category, sorted by count descending.
  *
- *   data-visualization,data-collection,...
- *   42,37,...
+ *   categoria,software
+ *   data-visualization,107
+ *   data-collection,98
  *
  * The engine implements the optional `toCsv()` method. `main.ts` uses it in
  * place of the generic `metricsToCsv` when present, since this format doesn't
@@ -40,7 +41,9 @@ export class CatalogoCategoriesEngine implements Engine<number> {
       }
     }
 
-    this.sortedCounts = [...counts.entries()].sort((a, b) => a[1] - b[1]);
+    this.sortedCounts = [...counts.entries()].sort((a, b) =>
+      b[1] - a[1] || a[0].localeCompare(b[0])
+    );
 
     const metrics: MetricsByDay<number> = new Map();
     for (const [cat, count] of this.sortedCounts) {
@@ -49,11 +52,15 @@ export class CatalogoCategoriesEngine implements Engine<number> {
     return metrics;
   }
 
-  /** Wide-format CSV: categories as headers, counts as the single data row. */
+  /** CSV: one row per category, sorted by count descending. */
   toCsv(): string {
-    const columns = this.sortedCounts.map(([cat]) => cat);
-    const row: Record<string, number> = {};
-    for (const [cat, n] of this.sortedCounts) row[cat] = n;
-    return stringify([row], { columns, headers: true });
+    const rows = this.sortedCounts.map(([cat, n]) => ({
+      categoria: cat,
+      software: n,
+    }));
+    return stringify(rows, {
+      columns: ["categoria", "software"],
+      headers: true,
+    });
   }
 }

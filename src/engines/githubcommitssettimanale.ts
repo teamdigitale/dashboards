@@ -2,10 +2,11 @@
  * Weekly aggregation of GitHub commits (num_commits).
  *
  * Reads github.csv from dataDir and sums num_commits by ISO week (Mon–Sun).
- * Output: wide-format CSV with week labels as headers.
+ * Output: CSV with one weekly value per row.
  *
- *   27/4 - 3/5 2026,4/5 - 10/5 2026,...
- *   142,98,...
+ *   settimana,commit
+ *   27/4 - 3/5 2026,142
+ *   4/5 - 10/5 2026,98
  *
  * Depends on github.csv being present in dataDir.
  */
@@ -39,6 +40,9 @@ export class GitHubCommitsSettimanaleEngine implements Engine<number> {
   }
 
   toCsv(): string {
-    return `${this.sortedWeeks.join(",")}\n${this.weeklyCounts.join(",")}\n`;
+    const rows = this.sortedWeeks.map((week, i) =>
+      `${week},${this.weeklyCounts[i]}`
+    );
+    return ["settimana,commit", ...rows].join("\n") + "\n";
   }
 }

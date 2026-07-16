@@ -2,7 +2,11 @@
  * Weekly aggregation of GitHub contributors (num_contribs).
  *
  * Reads github.csv from dataDir and sums num_contribs by ISO week (Mon–Sun).
- * Output: wide-format CSV with week labels as headers.
+ * Output: CSV with one weekly value per row.
+ *
+ *   settimana,contributori
+ *   27/4 - 3/5 2026,42
+ *   4/5 - 10/5 2026,37
  *
  * Depends on github.csv being present in dataDir.
  */
@@ -36,6 +40,9 @@ export class GitHubContribsSettimanaleEngine implements Engine<number> {
   }
 
   toCsv(): string {
-    return `${this.sortedWeeks.join(",")}\n${this.weeklyCounts.join(",")}\n`;
+    const rows = this.sortedWeeks.map((week, i) =>
+      `${week},${this.weeklyCounts[i]}`
+    );
+    return ["settimana,contributori", ...rows].join("\n") + "\n";
   }
 }

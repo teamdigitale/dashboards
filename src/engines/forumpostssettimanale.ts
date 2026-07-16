@@ -2,10 +2,11 @@
  * Weekly aggregation of forum posts (num_posts).
  *
  * Reads forum.csv from dataDir and sums num_posts by ISO week (Mon–Sun).
- * Output: wide-format CSV with week labels as headers.
+ * Output: CSV with one weekly value per row.
  *
- *   27/4 - 3/5 2026,4/5 - 10/5 2026,...
- *   42,37,...
+ *   settimana,post
+ *   27/4 - 3/5 2026,42
+ *   4/5 - 10/5 2026,37
  */
 
 import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
@@ -37,6 +38,9 @@ export class ForumPostsSettimanaleEngine implements Engine<number> {
   }
 
   toCsv(): string {
-    return `${this.sortedWeeks.join(",")}\n${this.weeklyCounts.join(",")}\n`;
+    const rows = this.sortedWeeks.map((week, i) =>
+      `${week},${this.weeklyCounts[i]}`
+    );
+    return ["settimana,post", ...rows].join("\n") + "\n";
   }
 }

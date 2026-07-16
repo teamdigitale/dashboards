@@ -4,13 +4,17 @@
  * Computes the same per-day num_pas as catalogo.ts (new unique PAs by
  * codiceIPA per releaseDate), then produces a running total.
  *
- * Output (wide format, dates sorted chronologically):
- *   2005-05-01,2005-05-02,2005-05-03,...
- *   42,57,103,...
+ * Output: CSV with one cumulative value per row, sorted from older/smaller
+ * cumulative values to newer/larger cumulative values.
+ *
+ *   data,pa
+ *   2005-05-01,42
+ *   2005-05-02,57
  *
  * No credentials required.
  */
 
+import { stringify } from "@std/csv";
 import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
 import { fetchAllSoftware } from "../lib/catalogo_api.ts";
 import { getLogger } from "../lib/logger.ts";
@@ -85,8 +89,12 @@ export class CatalogoPasCumulativoEngine implements Engine<number> {
     return metrics;
   }
 
-  /** Wide-format CSV: dates as headers, cumulative counts as single row. */
+  /** CSV: one row per date, sorted by ascending cumulative count. */
   toCsv(): string {
-    return `${this.dates.join(",")}\n${this.cumulative.join(",")}\n`;
+    const rows = this.dates.map((date, i) => ({
+      data: date,
+      pa: this.cumulative[i],
+    }));
+    return stringify(rows, { columns: ["data", "pa"], headers: true });
   }
 }

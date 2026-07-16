@@ -1,11 +1,11 @@
 /**
  * Software catalog audiences engine.
  *
- * Produces a wide-format CSV: audiences as column headers sorted by count
- * ascending, a single data row with the per-audience software counts.
+ * Produces a CSV with one row per audience, sorted by count descending.
  *
- *   government,local-authorities,...
- *   42,37,...
+ *   audience,software
+ *   government,93
+ *   local-authorities,54
  *
  * Source field: publiccode.yml intendedAudience.scope (array of strings).
  * No credentials required.
@@ -37,7 +37,9 @@ export class CatalogoAudiencesEngine implements Engine<number> {
       }
     }
 
-    this.sortedCounts = [...counts.entries()].sort((a, b) => a[1] - b[1]);
+    this.sortedCounts = [...counts.entries()].sort((a, b) =>
+      b[1] - a[1] || a[0].localeCompare(b[0])
+    );
 
     const metrics: MetricsByDay<number> = new Map();
     for (const [audience, count] of this.sortedCounts) {
@@ -46,11 +48,15 @@ export class CatalogoAudiencesEngine implements Engine<number> {
     return metrics;
   }
 
-  /** Wide-format CSV: audiences as headers, counts as the single data row. */
+  /** CSV: one row per audience, sorted by count descending. */
   toCsv(): string {
-    const columns = this.sortedCounts.map(([audience]) => audience);
-    const row: Record<string, number> = {};
-    for (const [audience, n] of this.sortedCounts) row[audience] = n;
-    return stringify([row], { columns, headers: true });
+    const rows = this.sortedCounts.map(([audience, n]) => ({
+      audience,
+      software: n,
+    }));
+    return stringify(rows, {
+      columns: ["audience", "software"],
+      headers: true,
+    });
   }
 }
