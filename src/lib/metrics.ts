@@ -5,7 +5,7 @@ import type { MetricsByDay, Timestamp } from "../engines/engine.ts";
  * metric name to 0.
  */
 export function ensureDay(
-  metrics: MetricsByDay<number>,
+  metrics: MetricsByDay,
   timestamp: Timestamp,
   metricNames: readonly string[],
 ): void {

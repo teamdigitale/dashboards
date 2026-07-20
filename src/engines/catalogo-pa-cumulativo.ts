@@ -1,8 +1,8 @@
 /**
  * Cumulative PA count over time.
  *
- * Computes the same per-day num_pas as catalogo.ts (new unique PAs by
- * codiceIPA per releaseDate), then produces a running total.
+ * Counts new unique PAs by codiceIPA and release date, then produces a
+ * running total.
  *
  * Output: CSV with one cumulative value per row, sorted from older/smaller
  * cumulative values to newer/larger cumulative values.
@@ -15,26 +15,26 @@
  */
 
 import { stringify } from "@std/csv";
-import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
-import { fetchAllSoftware } from "../lib/catalogo_api.ts";
+import type { CsvRowsEngine, MetricsByDay } from "./engine.ts";
+import type { CatalogoDataSource } from "../lib/catalogo_data_source.ts";
 import { getLogger } from "../lib/logger.ts";
 
-export class CatalogoPasCumulativoEngine implements Engine<number> {
-  readonly name = "catalogopascumulativo";
+export class CatalogoPaCumulativoEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "data";
   readonly metricNames = ["num_pas"] as const;
 
-  constructor(_ctx: EngineContext) {}
+  constructor(private readonly catalogo: CatalogoDataSource) {}
 
-  private readonly log = getLogger("catalogopascumulativo");
+  private readonly log = getLogger("catalogo-pa-cumulativo");
   private dates: string[] = [];
   private cumulative: number[] = [];
 
-  async computeStats(): Promise<MetricsByDay<number>> {
-    this.log.info("Fetching software catalog...");
-    const items = await fetchAllSoftware();
+  async computeStats(): Promise<MetricsByDay> {
+    this.log.info("Aggregating cumulative PA counts...");
+    const items = await this.catalogo.getAllSoftware();
 
-    // Per-day new unique PAs — same deduplication as catalogo.ts.
+    // Per-day new unique PAs.
     const seenPas = new Set<string>();
     const newPasByDay = new Map<string, number>();
     for (const item of items) {
@@ -82,7 +82,7 @@ export class CatalogoPasCumulativoEngine implements Engine<number> {
     }
 
     // Return non-cumulative daily values for standard interface compatibility.
-    const metrics: MetricsByDay<number> = new Map();
+    const metrics: MetricsByDay = new Map();
     for (const [ts, count] of sorted) {
       metrics.set(ts.slice(0, 10), { num_pas: count });
     }

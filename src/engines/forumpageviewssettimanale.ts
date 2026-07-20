@@ -9,11 +9,11 @@
  *   4/5 - 10/5 2026,980
  */
 
-import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
+import type { CsvRowsEngine, EngineContext, MetricsByDay } from "./engine.ts";
 import { aggregateWeekly } from "../lib/weekly.ts";
 
-export class ForumPageviewsSettimanaleEngine implements Engine<number> {
-  readonly name = "forumpageviewssettimanale";
+export class ForumPageviewsSettimanaleEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "settimana";
   readonly metricNames = ["num_pageviewes"] as const;
 
@@ -25,7 +25,7 @@ export class ForumPageviewsSettimanaleEngine implements Engine<number> {
     this.ctx = ctx;
   }
 
-  async computeStats(): Promise<MetricsByDay<number>> {
+  async computeStats(): Promise<MetricsByDay> {
     const result = await aggregateWeekly(
       this.ctx,
       "forum.csv",

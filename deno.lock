@@ -16,6 +16,7 @@
     "jsr:@std/log@~0.224.14": "0.224.14",
     "jsr:@std/path@^1.1.4": "1.1.4",
     "jsr:@std/streams@^1.0.9": "1.1.0",
+    "jsr:@std/yaml@*": "1.0.5",
     "jsr:@std/yaml@^1.0.5": "1.0.5",
     "npm:@octokit/plugin-throttling@^11.0.1": "11.0.3_@octokit+core@7.0.6",
     "npm:ajv-errors@3": "3.0.0_ajv@8.18.0",

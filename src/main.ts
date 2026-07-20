@@ -14,7 +14,7 @@ import { loadSync } from "@std/dotenv";
 import { join } from "@std/path";
 import { ENGINES, listEngines } from "./engines/registry.ts";
 import { buildContext } from "./lib/config.ts";
-import { metricsToCsv } from "./lib/csv.ts";
+import { kpiToCsv, metricsToCsv } from "./lib/csv.ts";
 import { readLastTimestamp } from "./lib/incremental.ts";
 import { getLogger } from "./lib/logger.ts";
 
@@ -36,9 +36,9 @@ const args = parseArgs(Deno.args, {
     "slack_token",
     "num_threads",
     "since",
-    "catalogoaudiences",
-    "catalogocategories",
-    "catalogoregioni",
+    "catalogo-audiences",
+    "catalogo-categories",
+    "catalogo-regioni",
   ],
   boolean: ["help", "incremental"],
   alias: { h: "help", e: "engine", d: "data-dir" },
@@ -63,9 +63,9 @@ Options:
       --slack_token     Slack bot token (or set SLACK_TOKEN)
 
   Catalog engines (no credentials required):
-      catalogoaudiences  intendedAudience.scope rows per software
-      catalogocategories categories rows per software
-      catalogoregioni    PA and software counts per Italian region
+      catalogo-audiences  intendedAudience.scope rows per software
+      catalogo-categories categories rows per software
+      catalogo-regioni    PA and software counts per Italian region
 
   -h, --help            Show this help
 `);
@@ -100,10 +100,17 @@ await Deno.mkdir(args["data-dir"], { recursive: true });
 
 let failed = 0;
 for (const key of selected) {
-  // Per-engine `since` is computed here so --incremental can read each
-  // engine's own CSV.
   let engineSince = since;
-  if (args.incremental) {
+  let ctx = buildContext(args as Record<string, string | undefined>, {
+    numThreads,
+    since: engineSince,
+    dataDir: args["data-dir"] as string,
+  });
+  let engine = ENGINES[key](ctx);
+
+  // Incremental mode applies only to row engines. KPI engines always replace
+  // their single current value.
+  if (args.incremental && engine.outputType === "rows") {
     const csvPath = join(args["data-dir"], `${key}.csv`);
     const last = await readLastTimestamp(csvPath);
     if (!last) {
@@ -114,32 +121,33 @@ for (const key of selected) {
       continue;
     }
     engineSince = new Date(last);
+    ctx = buildContext(args as Record<string, string | undefined>, {
+      numThreads,
+      since: engineSince,
+      dataDir: args["data-dir"] as string,
+    });
+    engine = ENGINES[key](ctx);
   }
 
-  const ctx = buildContext(args as Record<string, string | undefined>, {
-    numThreads,
-    since: engineSince,
-    dataDir: args["data-dir"] as string,
-  });
-
-  const engine = ENGINES[key](ctx);
   log.info(
-    `Running engine "${engine.name}"${
+    `Running engine "${key}"${
       engineSince ? ` since ${engineSince.toISOString()}` : ""
     }...`,
   );
 
   try {
+    const outPath = join(args["data-dir"], `${key}.csv`);
+
+    if (engine.outputType === "kpi") {
+      const value = await engine.computeStats();
+      await Deno.writeTextFile(outPath, kpiToCsv(engine, value));
+      log.info(`Wrote KPI ${engine.metricName} to ${outPath}`);
+      continue;
+    }
+
     const stats = await engine.computeStats();
-    const outPath = join(args["data-dir"], `${engine.name}.csv`);
-
-    // Engines may implement toCsv() to override the default serialization
-    // (e.g. wide-format pivot tables that don't fit the key-value model).
-    const hasCustomCsv = "toCsv" in engine &&
-      typeof (engine as Record<string, unknown>).toCsv === "function";
-
-    if (hasCustomCsv) {
-      const csv = (engine as { toCsv: () => string }).toCsv();
+    if (engine.toCsv) {
+      const csv = engine.toCsv();
       await Deno.writeTextFile(outPath, csv);
     } else if (args.incremental) {
       const csv = metricsToCsv(engine, stats, false);
@@ -152,7 +160,7 @@ for (const key of selected) {
   } catch (err) {
     failed++;
     log.error(
-      `Engine "${engine.name}" failed: ${
+      `Engine "${key}" failed: ${
         err instanceof Error ? err.stack : String(err)
       }`,
     );

@@ -10,7 +10,7 @@ import { getLogger } from "./logger.ts";
 export interface WeeklyResult {
   sortedWeeks: string[];
   weeklyCounts: number[];
-  metrics: MetricsByDay<number>;
+  metrics: MetricsByDay;
 }
 
 export async function aggregateWeekly(
@@ -42,7 +42,7 @@ export async function aggregateWeekly(
   const sortedWeeks = sorted.map(([key]) => key.slice(11));
   const weeklyCounts = sorted.map(([, n]) => n);
 
-  const metrics: MetricsByDay<number> = new Map();
+  const metrics: MetricsByDay = new Map();
   for (let i = 0; i < sorted.length; i++) {
     metrics.set(sortedWeeks[i], { [metricName]: weeklyCounts[i] });
   }

@@ -7,8 +7,8 @@
  * No credentials required.
  */
 
-import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
-import { fetchAllSoftware } from "../lib/catalogo_api.ts";
+import type { CsvRowsEngine, MetricsByDay } from "./engine.ts";
+import type { CatalogoDataSource } from "../lib/catalogo_data_source.ts";
 import { getLogger } from "../lib/logger.ts";
 
 const INDICEPA_URL =
@@ -37,19 +37,19 @@ const REGIONI = [
   "Veneto",
 ] as const;
 
-export class CatalogoRegioniEngine implements Engine {
-  readonly name = "catalogoregioni";
+export class CatalogoRegioniEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "regione";
   readonly metricNames = ["num_pas"] as const;
 
-  constructor(_ctx: EngineContext) {}
+  constructor(private readonly catalogo: CatalogoDataSource) {}
 
-  private readonly log = getLogger("catalogoregioni");
+  private readonly log = getLogger("catalogo-regioni");
 
   async computeStats(): Promise<MetricsByDay> {
     this.log.info("Fetching software catalog and IndicePA data...");
     const [items, codiceIpaToRegione] = await Promise.all([
-      fetchAllSoftware(),
+      this.catalogo.getAllSoftware(),
       this.fetchIndicePA(),
     ]);
 

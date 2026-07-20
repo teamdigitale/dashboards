@@ -11,11 +11,11 @@
  * Depends on github.csv being present in dataDir.
  */
 
-import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
+import type { CsvRowsEngine, EngineContext, MetricsByDay } from "./engine.ts";
 import { aggregateWeekly } from "../lib/weekly.ts";
 
-export class GitHubCommitsSettimanaleEngine implements Engine<number> {
-  readonly name = "githubcommitssettimanale";
+export class GitHubCommitsSettimanaleEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "settimana";
   readonly metricNames = ["num_commits"] as const;
 
@@ -27,7 +27,7 @@ export class GitHubCommitsSettimanaleEngine implements Engine<number> {
     this.ctx = ctx;
   }
 
-  async computeStats(): Promise<MetricsByDay<number>> {
+  async computeStats(): Promise<MetricsByDay> {
     const result = await aggregateWeekly(
       this.ctx,
       "github.csv",

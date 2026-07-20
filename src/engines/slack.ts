@@ -12,7 +12,7 @@
  */
 
 import type {
-  Engine,
+  CsvRowsEngine,
   EngineContext,
   MetricsByDay,
   Timestamp,
@@ -31,8 +31,8 @@ interface UsersListResponse {
   response_metadata?: { next_cursor?: string };
 }
 
-export class SlackEngine implements Engine {
-  readonly name = "slack";
+export class SlackEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "timestamp";
   readonly metricNames = ["num_registered_users"] as const;
 

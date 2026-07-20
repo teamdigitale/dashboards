@@ -16,23 +16,23 @@
  */
 
 import { stringify } from "@std/csv";
-import type { Engine, EngineContext, MetricsByDay } from "./engine.ts";
-import { fetchAllSoftware } from "../lib/catalogo_api.ts";
+import type { CsvRowsEngine, MetricsByDay } from "./engine.ts";
+import type { CatalogoDataSource } from "../lib/catalogo_data_source.ts";
 import { getLogger } from "../lib/logger.ts";
 
-export class CatalogoCategoriesEngine implements Engine<number> {
-  readonly name = "catalogocategories";
+export class CatalogoCategoriesEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "category";
   readonly metricNames = ["num_softwares"] as const;
 
-  constructor(_ctx: EngineContext) {}
+  constructor(private readonly catalogo: CatalogoDataSource) {}
 
-  private readonly log = getLogger("catalogocategories");
+  private readonly log = getLogger("catalogo-categories");
   private sortedCounts: Array<[string, number]> = [];
 
-  async computeStats(): Promise<MetricsByDay<number>> {
-    this.log.info("Fetching software catalog for categories...");
-    const items = await fetchAllSoftware();
+  async computeStats(): Promise<MetricsByDay> {
+    this.log.info("Aggregating software catalog categories...");
+    const items = await this.catalogo.getAllSoftware();
 
     const counts = new Map<string, number>();
     for (const item of items) {
@@ -45,7 +45,7 @@ export class CatalogoCategoriesEngine implements Engine<number> {
       b[1] - a[1] || a[0].localeCompare(b[0])
     );
 
-    const metrics: MetricsByDay<number> = new Map();
+    const metrics: MetricsByDay = new Map();
     for (const [cat, count] of this.sortedCounts) {
       metrics.set(cat, { num_softwares: count });
     }

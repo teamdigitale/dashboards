@@ -15,7 +15,7 @@ import { Octokit } from "octokit";
 import { throttling } from "@octokit/plugin-throttling";
 
 import type {
-  Engine,
+  CsvRowsEngine,
   EngineContext,
   MetricsByDay,
   Timestamp,
@@ -50,8 +50,8 @@ interface Member {
   login: string;
 }
 
-export class GitHubEngine implements Engine {
-  readonly name = "github";
+export class GitHubEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "timestamp";
   readonly metricNames = [
     "num_members",

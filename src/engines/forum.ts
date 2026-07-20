@@ -11,7 +11,7 @@
 
 import Discourse, { HTTPError } from "discourse2";
 import type {
-  Engine,
+  CsvRowsEngine,
   EngineContext,
   MetricsByDay,
   Timestamp,
@@ -41,8 +41,8 @@ interface ReportResponse {
 const isRateLimit = (err: unknown): boolean =>
   err instanceof HTTPError && err.status === 429;
 
-export class ForumEngine implements Engine {
-  readonly name = "forum";
+export class ForumEngine implements CsvRowsEngine {
+  readonly outputType = "rows";
   readonly keyName = "timestamp";
   readonly metricNames = [
     "num_registered_users",

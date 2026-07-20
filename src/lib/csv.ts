@@ -1,5 +1,9 @@
 import { stringify } from "@std/csv";
-import type { Engine, MetricsByDay } from "../engines/engine.ts";
+import type {
+  CsvRowsEngine,
+  KpiEngine,
+  MetricsByDay,
+} from "../engines/engine.ts";
 
 /**
  * Serialize engine output to CSV.
@@ -8,8 +12,8 @@ import type { Engine, MetricsByDay } from "../engines/engine.ts";
  * the engine. Rows are sorted by key.
  */
 export function metricsToCsv(
-  engine: Engine<number | string>,
-  metrics: MetricsByDay<number | string>,
+  engine: CsvRowsEngine,
+  metrics: MetricsByDay,
   withHeader = true,
 ): string {
   const columns = [engine.keyName, ...engine.metricNames];
@@ -22,4 +26,15 @@ export function metricsToCsv(
     });
 
   return stringify(rows, { columns, headers: withHeader });
+}
+
+/** Serialize a single KPI as a one-column CSV with one data row. */
+export function kpiToCsv(
+  engine: KpiEngine,
+  value: number,
+): string {
+  return stringify([{ [engine.metricName]: value }], {
+    columns: [engine.metricName],
+    headers: true,
+  });
 }
