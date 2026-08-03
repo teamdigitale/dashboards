@@ -2,7 +2,9 @@
   "tasks": {
     "start": "deno run -P src/main.ts",
     "forum": "deno run -P src/main.ts --engine forum",
+    "forum-utenti-registrati": "deno run -P src/main.ts --engine forum-utenti-registrati",
     "github": "deno run -P src/main.ts --engine github",
+    "github-membri-pubblici": "deno run -P src/main.ts --engine github-membri-pubblici",
     "slack": "deno run -P src/main.ts --engine slack",
     "catalogo-audiences": "deno run -P src/main.ts --engine catalogo-audiences",
     "catalogo-categories": "deno run -P src/main.ts --engine catalogo-categories",

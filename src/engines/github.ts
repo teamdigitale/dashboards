@@ -11,9 +11,6 @@
  * permissions required.
  */
 
-import { Octokit } from "octokit";
-import { throttling } from "@octokit/plugin-throttling";
-
 import type {
   CsvRowsEngine,
   EngineContext,
@@ -24,9 +21,11 @@ import { stripDate } from "../lib/dates.ts";
 import { ensureDay } from "../lib/metrics.ts";
 import { pMap } from "../lib/http.ts";
 import { getLogger } from "../lib/logger.ts";
-
-const ORG = "italia";
-const ThrottledOctokit = Octokit.plugin(throttling);
+import type {
+  GitHubClient,
+  GitHubPublicMembersDataSource,
+} from "../lib/github_services.ts";
+import { GITHUB_ORG } from "../lib/github_services.ts";
 
 interface Repo {
   name: string;
@@ -46,10 +45,6 @@ interface Issue {
   pull_request?: unknown;
 }
 
-interface Member {
-  login: string;
-}
-
 export class GitHubEngine implements CsvRowsEngine {
   readonly outputType = "rows";
   readonly keyName = "timestamp";
@@ -67,33 +62,17 @@ export class GitHubEngine implements CsvRowsEngine {
   private readonly metrics: MetricsByDay = new Map();
   // Per-day set of unique commit authors. Collapsed to counts at the end.
   private readonly contribsByDay = new Map<Timestamp, Set<string>>();
-  private readonly client: Octokit;
+  private readonly client: GitHubClient;
 
   private repos: Repo[] | null = null;
 
-  constructor(ctx: EngineContext) {
+  constructor(
+    ctx: EngineContext,
+    client: GitHubClient,
+    private readonly publicMembers: GitHubPublicMembersDataSource,
+  ) {
     this.ctx = ctx;
-    const token = ctx.getProperty("github_token");
-    if (!token) {
-      throw new Error("Missing GITHUB_TOKEN (env) or --github_token (CLI)");
-    }
-    this.client = new ThrottledOctokit({
-      auth: token,
-      throttle: {
-        onRateLimit: (retryAfter, opts, _o, retryCount) => {
-          this.log.warn(
-            `Rate limit hit on ${opts.method} ${opts.url}, retry after ${retryAfter}s (#${retryCount})`,
-          );
-          return retryCount < 3;
-        },
-        onSecondaryRateLimit: (retryAfter, opts, _o, retryCount) => {
-          this.log.warn(
-            `Secondary rate limit on ${opts.method} ${opts.url}, retry after ${retryAfter}s (#${retryCount})`,
-          );
-          return retryCount < 3;
-        },
-      },
-    });
+    this.client = client;
   }
 
   async computeStats(): Promise<MetricsByDay> {
@@ -140,11 +119,8 @@ export class GitHubEngine implements CsvRowsEngine {
    * minimum-privilege public-data-only token.
    */
   private async collectMembers(): Promise<void> {
-    this.log.info("Getting public members...");
-    const members = await this.client.paginate<Member>(
-      "GET /orgs/{org}/public_members",
-      { org: ORG, per_page: 100 },
-    );
+    this.log.info("Aggregating public members...");
+    const members = await this.publicMembers.getAllMembers();
     const today = stripDate(new Date());
     this.touch(today);
     this.metrics.get(today)!.num_members = members.length;
@@ -158,7 +134,7 @@ export class GitHubEngine implements CsvRowsEngine {
     this.repos = await this.client.paginate<Repo>(
       "GET /users/{username}/repos",
       {
-        username: ORG,
+        username: GITHUB_ORG,
         per_page: 100,
       },
     );
@@ -181,7 +157,7 @@ export class GitHubEngine implements CsvRowsEngine {
     await pMap(this.repos!, this.ctx.numThreads, async (repo) => {
       const forks = await this.safePaginate<Fork>(
         "GET /repos/{owner}/{repo}/forks",
-        { owner: ORG, repo: repo.name, per_page: 100 },
+        { owner: GITHUB_ORG, repo: repo.name, per_page: 100 },
       );
       for (const f of forks ?? []) {
         if (!this.afterSince(f.created_at)) continue;
@@ -201,7 +177,7 @@ export class GitHubEngine implements CsvRowsEngine {
     await pMap(this.repos!, this.ctx.numThreads, async (repo) => {
       const commits = await this.safePaginate<Commit>(
         "GET /repos/{owner}/{repo}/commits",
-        { owner: ORG, repo: repo.name, per_page: 100, since },
+        { owner: GITHUB_ORG, repo: repo.name, per_page: 100, since },
       );
       for (const c of commits ?? []) {
         const date = c.commit?.author?.date;
@@ -236,7 +212,13 @@ export class GitHubEngine implements CsvRowsEngine {
       // /issues includes PRs and supports `since`; /pulls does not.
       const issues = await this.safePaginate<Issue>(
         "GET /repos/{owner}/{repo}/issues",
-        { owner: ORG, repo: repo.name, state: "all", per_page: 100, since },
+        {
+          owner: GITHUB_ORG,
+          repo: repo.name,
+          state: "all",
+          per_page: 100,
+          since,
+        },
       );
       for (const issue of issues ?? []) {
         if (!issue.pull_request) continue;

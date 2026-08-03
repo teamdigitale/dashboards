@@ -1,5 +1,5 @@
 /**
- * Slack workspace (developersitalia) stats engine.
+ * Total number of registered users in the developersitalia Slack workspace.
  *
  * Port of `slack_stats.py`. Only `num_registered_users` is implemented:
  * the other methods in the original (`num_channels`, `num_messages`,
@@ -11,15 +11,8 @@
  * `developersitalia` workspace and copy the Bot OAuth token.
  */
 
-import type {
-  CsvRowsEngine,
-  EngineContext,
-  MetricsByDay,
-  Timestamp,
-} from "./engine.ts";
+import type { EngineContext, KpiEngine } from "./engine.ts";
 import { fetchJson } from "../lib/http.ts";
-import { stripDate } from "../lib/dates.ts";
-import { ensureDay } from "../lib/metrics.ts";
 import { getLogger } from "../lib/logger.ts";
 
 const BASE_URL = "https://slack.com/api";
@@ -31,39 +24,32 @@ interface UsersListResponse {
   response_metadata?: { next_cursor?: string };
 }
 
-export class SlackEngine implements CsvRowsEngine {
-  readonly outputType = "rows";
-  readonly keyName = "timestamp";
-  readonly metricNames = ["num_registered_users"] as const;
+export class SlackEngine implements KpiEngine {
+  readonly outputType = "kpi";
+  readonly metricName = "num_registered_users";
 
-  private readonly ctx: EngineContext;
+  private readonly token: string;
   private readonly log = getLogger("slack");
 
   constructor(ctx: EngineContext) {
-    this.ctx = ctx;
-    if (!ctx.getProperty("slack_token")) {
+    const token = ctx.getProperty("slack_token");
+    if (!token) {
       throw new Error("Missing SLACK_TOKEN (env) or --slack_token (CLI)");
     }
+    this.token = token;
   }
 
-  async computeStats(): Promise<MetricsByDay> {
+  async computeStats(): Promise<number> {
     this.log.info("Getting registered users...");
 
     const members = await this.fetchAllMembers();
     // Replicate the Python behaviour: count everyone, including bots and
     // deactivated accounts, as the original does no filtering.
-    const count = members.length;
-
-    const metrics: MetricsByDay = new Map();
-    const today = stripDate(new Date()) as Timestamp;
-    ensureDay(metrics, today, this.metricNames);
-    metrics.get(today)!.num_registered_users = count;
-
-    return metrics;
+    return members.length;
   }
 
   private authHeaders(): Record<string, string> {
-    return { Authorization: `Bearer ${this.ctx.getProperty("slack_token")}` };
+    return { Authorization: `Bearer ${this.token}` };
   }
 
   /** Walk cursor-paginated `users.list`, collecting all pages. */

@@ -21,11 +21,13 @@ import { withRetry } from "../lib/retry.ts";
 import { buildDateWindows, stripDate } from "../lib/dates.ts";
 import { ensureDay } from "../lib/metrics.ts";
 import { getLogger } from "../lib/logger.ts";
+import {
+  FORUM_BASE_URL,
+  type ForumUsersDataSource,
+} from "../lib/forum_users_data_source.ts";
 
-const BASE_URL = "https://forum.italia.it";
 const HISTORY_START = new Date(Date.UTC(2017, 0, 1));
 
-type AdminUser = Awaited<ReturnType<Discourse["adminListUsers"]>>[number];
 type LatestPost = NonNullable<
   Awaited<ReturnType<Discourse["listPosts"]>>["latest_posts"]
 >[number];
@@ -59,16 +61,18 @@ export class ForumEngine implements CsvRowsEngine {
   private readonly metrics: MetricsByDay = new Map();
   private readonly client: Discourse;
 
-  private users: AdminUser[] | null = null;
   private posts: LatestPost[] | null = null;
 
-  constructor(ctx: EngineContext) {
+  constructor(
+    ctx: EngineContext,
+    private readonly forumUsers: ForumUsersDataSource,
+  ) {
     this.ctx = ctx;
     const apiKey = ctx.getProperty("forum_api_key");
     if (!apiKey) {
       throw new Error("Missing FORUM_API_KEY (env) or --forum_api_key (CLI)");
     }
-    this.client = new Discourse(BASE_URL, {
+    this.client = new Discourse(FORUM_BASE_URL, {
       "Api-Key": apiKey,
       "Api-Username": "system",
     });
@@ -96,16 +100,8 @@ export class ForumEngine implements CsvRowsEngine {
   // --- users: registered + active ----------------------------------------
 
   private async collectUsers(): Promise<void> {
-    this.log.info("Getting users (registered + active)...");
-    const users: AdminUser[] = [];
-    for (let page = 1;; page++) {
-      const chunk = await this.call(() =>
-        this.client.adminListUsers({ flag: "active", page })
-      );
-      if (!Array.isArray(chunk) || chunk.length === 0) break;
-      users.push(...chunk);
-    }
-    this.users = users;
+    this.log.info("Aggregating registered and active users...");
+    const users = await this.forumUsers.getAllUsers();
 
     for (const u of users) {
       this.touch(stripDate(u.created_at)).num_registered_users += 1;
@@ -126,12 +122,12 @@ export class ForumEngine implements CsvRowsEngine {
       jobs.push({
         field: "num_pageviewes",
         url:
-          `${BASE_URL}/admin/reports/page_view_total_reqs.json?start_date=${start}&end_date=${end}`,
+          `${FORUM_BASE_URL}/admin/reports/page_view_total_reqs.json?start_date=${start}&end_date=${end}`,
       });
       jobs.push({
         field: "num_topics",
         url:
-          `${BASE_URL}/admin/reports/topics.json?start_date=${start}&end_date=${end}`,
+          `${FORUM_BASE_URL}/admin/reports/topics.json?start_date=${start}&end_date=${end}`,
       });
     }
 
